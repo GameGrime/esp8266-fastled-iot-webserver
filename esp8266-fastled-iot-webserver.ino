@@ -71,9 +71,9 @@ extern "C" {
 
 #define LED_DEBUG 0                     // enable debug messages on serial console, set to 0 to disable debugging
 
-#define DEFAULT_HOSTNAME "LED-Strip"         // Name that appears in your network, don't use whitespaces, use "-" instead
+#define DEFAULT_HOSTNAME "NANOS"         // Name that appears in your network, don't use whitespaces, use "-" instead
 
-#define LED_DEVICE_TYPE 0               // The following types are available
+#define LED_DEVICE_TYPE 4               // The following types are available
 
 /*
     0: Generic LED-Strip: a regular LED-Strip without any special arrangement (and Infinity Mirror + Bottle Lighting Pad)
@@ -133,8 +133,8 @@ extern "C" {
     #define LEDS_PER_LINE 10            // Amount of led pixel per single led strip piece
 
 #elif LED_DEVICE_TYPE == 4              // Nanoleafs
-    #define LEAFCOUNT 12                // Amount of triangles
-    #define PIXELS_PER_LEAF 12          // Amount of LEDs inside 1x Tringle
+    #define LEAFCOUNT 11                // Amount of triangles
+    #define PIXELS_PER_LEAF 18          // Amount of LEDs inside 1x Tringle
 
 #elif LED_DEVICE_TYPE == 5              // Animated Logos
     // Choose your logo below, remove the comment in front of your design
@@ -467,6 +467,8 @@ uint8_t sparking = 50;
 
 uint8_t speed = 70;
 
+uint8_t song_bpm = 120;
+
 ///////////////////////////////////////////////////////////////////////
 
 // Forward declarations of an array of cpt-city gradient palettes, and
@@ -655,6 +657,13 @@ PatternAndNameList patterns = {
     { NanoleafWaves,                "Nanoleaf Wave Visualizer",               true,  true,  false, false, false},
     { NanoleafBand,                 "Nanoleaf Rainbow Band Visualizer",       true,  true,  false, false, false},
     { NanoleafSingleBand,           "Nanoleaf Solid Color Band Visualizer",   true,  true,  true,  false, false},
+    { grimyNanosT1,                       "Grimy Nanos Tier 1", false, false, false, false, false},
+    { grimyNanosT2,                       "Grimy Nanos Tier 2", false, false, false, false, false},
+    { grimyNanos1K,                       "Grimy Nanos 1K Bits", false, false, false, false, false},
+    { grimyNanos_BW,                       "Grimy Nanos BW", false, false, false, false, false},
+    { grimyNanos10K,                       "Grimy Nanos 10K Bits", false, false, false, false, false},
+    { grimyNanos124,                      "Grimy Nanos Ukraine", false, false, false, false, false},
+
 #endif
 #endif // ENABLE_UDP_VISUALIZATION
 
@@ -1191,7 +1200,12 @@ void setup() {
         setSpeed(value.toInt());
         sendInt(speed);
         });
-
+    webServer.on("/bpm", []() {
+        String value = webServer.arg("value");
+        song_bpm = value.toInt();
+        broadcastInt("bpm", song_bpm);
+        sendInt(song_bpm);
+        });
     webServer.on("/twinkleDensity", []() {
         String value = webServer.arg("value");
         twinkleDensity = value.toInt();
@@ -1981,6 +1995,286 @@ void strobe(bool rainbow)
     }
 }
 
+
+void grimyNanosT1()
+{
+#if DEVICE_TYPE == 4
+    for (int i = 0; i < LEAFCOUNT; i++)
+    {
+        //Bottom Triangles
+        if (i % 2 == 0){
+            fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, CRGB(0, 255, 0));
+        }
+        //Top Triangles
+        else{
+            fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, CRGB(189, 33, 221));
+        }    
+    }
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
+
+void grimyNanosT2()
+{
+
+#define grimyYellow CHSV(47, 242, 250)
+#define grimyGreen CHSV(90, 255, 255)  
+
+#if DEVICE_TYPE == 4
+//    for (int i = 0; i < LEAFCOUNT; i++)
+//    {
+//        //Bottom Triangles
+//        if (i % 2 == 0){
+//            fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, CRGB(128, 255, 0));
+//        }
+//        //Top Triangles
+//        else{
+//            fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, CRGB(250, 197, 13));
+//        }    
+//    }
+    static int hSwitch = 0;
+    static int shapeSize = 2; //LEAFCOUNT for full bar. 1 for one Triangle
+    static bool h = false;
+    int patternPos;
+    patternPos = shapeSize - hSwitch;
+    
+    CHSV toSend;
+    CHSV toSend1;
+    CHSV toSend2;
+
+    if (h){
+        toSend = grimyGreen;        
+        if(patternPos == shapeSize){ //Shape Starting
+            toSend1 = grimyGreen;
+            toSend2 = grimyYellow;
+        }
+        else if(patternPos == 1){ //Shape Ending
+            toSend2 = grimyGreen;
+            toSend1 = grimyGreen;
+        }
+        else{
+            toSend1 = grimyGreen;
+            toSend2 = grimyGreen;
+        }
+    }
+
+    
+    else{
+        toSend = grimyYellow; 
+        if(patternPos == shapeSize){ //Shape Starting
+            toSend2 = grimyYellow;
+            toSend1 = grimyYellow;
+        }
+        else if(patternPos == 1){ //Shape Ending
+            //toSend2 = grimyYellow;
+            //toSend1 = grimyGreen;
+        }
+
+        else{
+            toSend2 = grimyYellow;
+            toSend1 = grimyYellow;
+        }
+        hSwitch++;
+    }    
+
+    int update_rate = map(speed, 0, 255, 500, 10);
+    if (update_rate >= 0)
+    {
+        ShiftLeds(6); //3 = One Triangle
+        SendLeds(toSend2, 6);
+        SendLeds(toSend1, 3);
+        delay(update_rate);
+    }
+    else
+    {
+        int steps = map(update_rate, -264, 0, 8, 0);
+        steps /= 2;
+        steps *= 3;
+        ShiftLeds(steps);
+        SendLeds(toSend, steps);
+    }
+
+    hSwitch++;
+    if (hSwitch >= shapeSize) { 
+        hSwitch = 0;
+        h = !h;
+    }
+    
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
+
+
+
+void grimyNanos124() //grimyNanos1K
+{
+#if DEVICE_TYPE == 4
+    static int hSwitch = 0;
+    static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
+    static bool h = false;
+    #define beatsC_One CRGB(255, 255, 14)
+    #define beatsC_Two CRGB(14, 14, 255)
+    
+    if (h){
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+      }
+    }
+    else{
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+      }
+    }
+
+    h = !h;
+    int update_rate = ((60000 / song_bpm) - 11);
+    //int update_rate = 500 - 11; //Time in MS - (Delay). https://tuneform.com/tools/time-tempo-bpm-to-milliseconds-ms BPM to MS
+    delay(update_rate);
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
+
+void grimyNanos1K() //grimyNanos124
+{
+#if DEVICE_TYPE == 4
+    static int hSwitch = 0;
+    static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
+    static bool h = false;
+    #define beatsC_One CRGB(255, 74, 14)
+    #define beatsC_Two CRGB(14, 255, 255)
+    
+    if (h){
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+      }
+    }
+    else{
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+      }
+    }
+
+    h = !h;
+    int update_rate = ((60000 / song_bpm) - 11);
+    //int update_rate = 500 - 11; //Time in MS - (Delay). https://tuneform.com/tools/time-tempo-bpm-to-milliseconds-ms BPM to MS
+    delay(update_rate);
+
+    
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
+
+void grimyNanos_BW()
+{
+#if DEVICE_TYPE == 4
+    static int hSwitch = 0;
+    static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
+    static bool h = false;
+    #define beatsC_One CRGB(30, 30, 30)
+    #define beatsC_Two CRGB(225, 225, 225)
+    
+    if (h){
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+      }
+    }
+    else{
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+      }
+    }
+
+    h = !h;
+    int update_rate = ((60000 / song_bpm) - 11);
+    //int update_rate = 500 - 11; //Time in MS - (Delay). https://tuneform.com/tools/time-tempo-bpm-to-milliseconds-ms BPM to MS
+    delay(update_rate);
+
+    
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
+
+void grimyNanos10K() //grimyNanos124
+{
+#if DEVICE_TYPE == 4
+    static int hSwitch = 0;
+    static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
+    static bool h = false;
+    #define beatsC_One CRGB(255, 0, 0)
+    #define beatsC_Two CRGB(255, 255, 0)
+    
+    if (h){
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+      }
+    }
+    else{
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+      }
+    }
+
+    h = !h;
+    int update_rate = ((60000 / song_bpm) - 11);
+    //int update_rate = 435 - 11; //Time in MS - (Delay). https://tuneform.com/tools/time-tempo-bpm-to-milliseconds-ms BPM to MS
+    delay(update_rate);
+
+    
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
 void rainbow_strobe()
 {
     strobe(true);
