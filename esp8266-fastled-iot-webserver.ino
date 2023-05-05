@@ -60,18 +60,18 @@ extern "C" {
 
 /*######################## MAIN CONFIG ########################*/
 #define LED_TYPE            WS2812B                     // You might also use a WS2811 or any other strip that is Fastled compatible 
-#define DATA_PIN            D3                          // Be aware: the pin mapping might be different on boards like the NodeMCU
+#define DATA_PIN            D4                          // Be aware: the pin mapping might be different on boards like the NodeMCU
 //#define CLK_PIN           D5                          // Only required when using 4-pin SPI-based LEDs
-#define MOSFET_PIN          D4                          // Pin for a MOSFET, can be used to physical power off the LED stripe
+#define MOSFET_PIN          D3                          // Pin for a MOSFET, can be used to physical power off the LED stripe
 #define MOSFET_LEVEL        (HIGH)                      // logic level for LED state 'on'
 #define CORRECTION          UncorrectedColor            // If colors are weird use TypicalLEDStrip
 #define COLOR_ORDER         GRB                         // Change this if colors are swapped (in my case, red was swapped with green)
-#define MILLI_AMPS          10000                       // IMPORTANT: set the max milli-Amps of your power supply (4A = 4000mA)
+#define MILLI_AMPS          8000                        // IMPORTANT: set the max milli-Amps of your power supply (4A = 4000mA)
 #define VOLTS               5                           // Voltage of the Power Supply
 
 #define LED_DEBUG 0                     // enable debug messages on serial console, set to 0 to disable debugging
 
-#define DEFAULT_HOSTNAME "LEDs"         // Name that appears in your network, don't use whitespaces, use "-" instead
+#define DEFAULT_HOSTNAME "LED-Strip"         // Name that appears in your network, don't use whitespaces, use "-" instead
 
 #define LED_DEVICE_TYPE 0               // The following types are available
 
@@ -108,10 +108,8 @@ extern "C" {
 // Device Configuration:
 //---------------------------------------------------------------------------------------------------------//
 #if LED_DEVICE_TYPE == 0                // Generic LED-Strip
-    #define NUM_LEDS 24
-    //#define NUM_LEDS 33
-    //#define NUM_LEDS 183
-    #define BAND_GROUPING    1            // Groups part of the band to save performance and network traffic
+    #define NUM_LEDS 204
+    #define BAND_GROUPING    4          // Groups part of the band to save performance and network traffic
 #elif LED_DEVICE_TYPE == 1              // LED MATRIX
     #define LENGTH 32
     #define HEIGHT 8
@@ -150,7 +148,7 @@ extern "C" {
 //---------------------------------------------------------------------------------------------------------//
 // Feature Configuration: Enabled by removing the "//" in front of the define statements
 //---------------------------------------------------------------------------------------------------------//
-    //#define ENABLE_OTA_SUPPORT                // requires ArduinoOTA - library, not working on esp's with 1MB memory (esp-01, Wemos D1 lite ...)
+    #define ENABLE_OTA_SUPPORT                // requires ArduinoOTA - library, not working on esp's with 1MB memory (esp-01, Wemos D1 lite ...)
         //#define OTA_PASSWORD "passwd123"      //  password that is required to update the esp's firmware wireless
 
     #define ENABLE_MULTICAST_DNS              // allows to access the UI via "http://<HOSTNAME>.local/", implemented by GitHub/WarDrake
@@ -164,10 +162,10 @@ extern "C" {
 
     //#define ENABLE_SERIAL_AMBILIGHT           // allows to function as an ambilight behind a monitor by using data from usb-serial (integration of adalight)
 
-    //#define ENABLE_MQTT_SUPPORT               // allows integration in homeassistant/googlehome/mqtt
+    #define ENABLE_MQTT_SUPPORT               // allows integration in homeassistant/googlehome/mqtt
                                                 // mqtt server required, see MQTT Configuration for more, implemented by GitHub/WarDrake
 
-    //#define ENABLE_UDP_VISUALIZATION          // allows to sync the LEDs with pc-music using https://github.com/NimmLor/IoT-Audio-Visualization-Center
+    #define ENABLE_UDP_VISUALIZATION          // allows to sync the LEDs with pc-music using https://github.com/NimmLor/IoT-Audio-Visualization-Center
 
     //#define ENABLE_HOMEY_SUPPORT              // Add support for Homey integration (Athom Homey library required)
 
