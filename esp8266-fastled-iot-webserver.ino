@@ -663,6 +663,7 @@ PatternAndNameList patterns = {
     { grimyNanos_BW,                       "Grimy Nanos BW", false, false, false, false, false},
     { grimyNanos10K,                       "Grimy Nanos 10K Bits", false, false, false, false, false},
     { grimyNanos124,                      "Grimy Nanos Ukraine", false, false, false, false, false},
+    { grimyNanos3K,                      "Grimy Nanos 3K Bits", false, false, false, false, false},
 
 #endif
 #endif // ENABLE_UDP_VISUALIZATION
@@ -1998,7 +1999,7 @@ void strobe(bool rainbow)
 
 void grimyNanosT1()
 {
-#if DEVICE_TYPE == 4
+#if LED_DEVICE_TYPE == 4
     for (int i = 0; i < LEAFCOUNT; i++)
     {
         //Bottom Triangles
@@ -2022,7 +2023,7 @@ void grimyNanosT2()
 #define grimyYellow CHSV(47, 242, 250)
 #define grimyGreen CHSV(90, 255, 255)  
 
-#if DEVICE_TYPE == 4
+#if LED_DEVICE_TYPE == 4
 //    for (int i = 0; i < LEAFCOUNT; i++)
 //    {
 //        //Bottom Triangles
@@ -2112,7 +2113,7 @@ void grimyNanosT2()
 
 void grimyNanos124() //grimyNanos1K
 {
-#if DEVICE_TYPE == 4
+#if LED_DEVICE_TYPE == 4
     static int hSwitch = 0;
     static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
     static bool h = false;
@@ -2152,7 +2153,7 @@ void grimyNanos124() //grimyNanos1K
 
 void grimyNanos1K() //grimyNanos124
 {
-#if DEVICE_TYPE == 4
+#if LED_DEVICE_TYPE == 4
     static int hSwitch = 0;
     static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
     static bool h = false;
@@ -2192,9 +2193,49 @@ void grimyNanos1K() //grimyNanos124
 #endif  
 }
 
+void grimyNanos3K() //grimyNanos3K
+{
+#if LED_DEVICE_TYPE == 4
+    static int hSwitch = 0;
+    static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
+    static bool h = false;
+    #define beatsC_One CRGB(255, 255, 14)
+    #define beatsC_Two CRGB(242, 101, 27)
+    
+    if (h){
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+      }
+    }
+    else{
+      for (int i = 0; i < LEAFCOUNT; i++){
+        if (i % 2 == 0){
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_Two);
+        }
+        else{
+          fill_solid(leds + i * PIXELS_PER_LEAF, PIXELS_PER_LEAF, beatsC_One);
+        }
+      }
+    }
+
+    h = !h;
+    int update_rate = ((60000 / song_bpm) - 11);
+    //int update_rate = 500 - 11; //Time in MS - (Delay). https://tuneform.com/tools/time-tempo-bpm-to-milliseconds-ms BPM to MS
+    delay(update_rate);
+#else
+    // FastLED's built-in rainbow generator
+    fill_rainbow(leds, NUM_LEDS, gHue, 255 / NUM_LEDS);
+#endif  
+}
+
 void grimyNanos_BW()
 {
-#if DEVICE_TYPE == 4
+#if LED_DEVICE_TYPE == 4
     static int hSwitch = 0;
     static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
     static bool h = false;
@@ -2236,7 +2277,7 @@ void grimyNanos_BW()
 
 void grimyNanos10K() //grimyNanos124
 {
-#if DEVICE_TYPE == 4
+#if LED_DEVICE_TYPE == 4
     static int hSwitch = 0;
     static int shapeSize = LEAFCOUNT; //LEAFCOUNT for full bar. 1 for one Triangle
     static bool h = false;
